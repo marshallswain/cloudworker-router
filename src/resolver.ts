@@ -1,33 +1,33 @@
 function getParams(req, route) {
-  const params = {};
+  const params = {}
 
-  const hostParamsMatch = route.hostRegex.exec(req.host);
+  const hostParamsMatch = route.hostRegex.exec(req.host)
   route.hostVariables.forEach((name, index) => {
-    params[name] = hostParamsMatch[index + 1];
-  });
+    params[name] = hostParamsMatch[index + 1]
+  })
 
-  const pathParamsMatch = route.pathRegex.exec(req.path);
+  const pathParamsMatch = route.pathRegex.exec(req.path)
   route.pathVariables.forEach((name, index) => {
-    params[name] = pathParamsMatch[index + 1];
-  });
+    params[name] = pathParamsMatch[index + 1]
+  })
 
-  return params;
+  return params
 }
 
 function testHeaders(route, request) {
-  let result = true;
+  let result = true
 
   Object.keys(route.headers).forEach((key) => {
     if (request.headers[key] !== route.headers[key]) {
-      result = false;
+      result = false
     }
-  });
+  })
 
-  return result;
+  return result
 }
 
 function testProtocol(route, request) {
-  return route.protocolRegex.test(request.protocol);
+  return route.protocolRegex.test(request.protocol)
 }
 
 /**
@@ -50,42 +50,37 @@ function testPath(route, request) {
     // eslint-disable-next-line operator-linebreak
     testProtocol(route, request) &&
     (!route.excludePath || !route.excludePathRegex.test(request.path))
-  );
+  )
 }
 
-function matchRoutePaths(request, routes) {
+export function matchRoutePaths(request, routes) {
   return routes.filter(
     (route) => route.hostRegex.test(request.host) && route.pathRegex.test(request.path),
-  );
+  )
 }
 
-async function recurseRoutes(ctx, routes) {
-  const [route, ...nextRoutes] = routes;
+export async function recurseRoutes(ctx, routes) {
+  const [route, ...nextRoutes] = routes
   if (!route) {
     // eslint-disable-next-line
     return new Response('NOT_FOUND', {
       status: 404,
-    });
+    })
   }
 
   if (!testPath(route, ctx.request)) {
-    return recurseRoutes(ctx, nextRoutes);
+    return recurseRoutes(ctx, nextRoutes)
   }
 
-  ctx.state.handlers = ctx.state.handlers || [];
+  ctx.state.handlers = ctx.state.handlers || []
   // Use the provided name and fall back to the name of the function
-  ctx.state.handlers.push(route.handlerName || route.handler.name);
-  ctx.params = getParams(ctx.request, route);
+  ctx.state.handlers.push(route.handlerName || route.handler.name)
+  ctx.params = getParams(ctx.request, route)
 
   try {
-    return route.handler(ctx, async (result) => recurseRoutes(result, nextRoutes));
+    return route.handler(ctx, async (result) => recurseRoutes(result, nextRoutes))
   } catch (err) {
-    err.route = route.handler.name;
-    throw err;
+    err.route = route.handler.name
+    throw err
   }
 }
-
-module.exports = {
-  matchRoutePaths,
-  recurseRoutes,
-};

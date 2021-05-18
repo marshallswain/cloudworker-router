@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   methods: {
     DELETE: 'DELETE',
     GET: 'GET',
@@ -11,4 +11,4 @@ module.exports = {
     404: 'Not found',
     429: 'Rate limited',
   },
-};
+}

@@ -1,79 +1,81 @@
-const parser = require('./parser');
-const resolver = require('./resolver');
-const constants = require('./constants');
-const Context = require('./context');
+import { parseRoute } from './parser'
+import { matchRoutePaths, recurseRoutes } from './resolver'
+import constants from './constants'
+import { Context } from './context'
 
-module.exports = class Router {
+export class Router {
+  routes!: any[]
+
   constructor() {
-    this.routes = [];
+    this.routes = []
   }
 
   get(path, handler) {
-    const route = parser.parseRoute({
+    const route = parseRoute({
       method: [constants.methods.GET, constants.methods.HEAD],
       path,
       handler,
-    });
+    })
 
-    this.routes.push(route);
+    this.routes.push(route)
   }
 
   options(path, handler) {
-    const route = parser.parseRoute({
+    const route = parseRoute({
       method: [constants.methods.OPTIONS],
       path,
       handler,
-    });
+    })
 
-    this.routes.push(route);
+    this.routes.push(route)
   }
 
   post(path, handler) {
-    const route = parser.parseRoute({
+    const route = parseRoute({
       method: [constants.methods.POST],
       path,
       handler,
-    });
+    })
 
-    this.routes.push(route);
+    this.routes.push(route)
   }
 
   patch(path, handler) {
-    const route = parser.parseRoute({
+    const route = parseRoute({
       method: [constants.methods.PATCH],
       path,
       handler,
-    });
+    })
 
-    this.routes.push(route);
+    this.routes.push(route)
   }
 
   del(path, handler) {
-    const route = parser.parseRoute({
+    const route = parseRoute({
       method: [constants.methods.DELETE],
       path,
       handler,
-    });
+    })
 
-    this.routes.push(route);
+    this.routes.push(route)
   }
 
   allowMethods() {
     this.options('.*', (ctx) => {
-      const matchingRoutes = resolver
-        .matchRoutePaths(ctx.request, this.routes)
-        .filter((route) => !route.middleware);
+      const matchingRoutes = matchRoutePaths(ctx.request, this.routes).filter(
+        (route) => !route.middleware,
+      )
 
-      const headers = {};
+      const headers = {}
       matchingRoutes.forEach((route) => {
         route.method.forEach((method) => {
-          headers[method] = true;
-        });
-      });
+          headers[method] = true
+        })
+      })
 
-      ctx.status = 204;
-      ctx.set('Access-Control-Allow-Method', Object.keys(headers).join(', '));
-    });
+      ctx.status = 204
+      ctx.set('Access-Control-Allow-Method', Object.keys(headers).join(', '))
+    })
   }
 
   /**
@@ -81,14 +83,14 @@ module.exports = class Router {
    * @param {*} handler
    */
   use(handler) {
-    const route = parser.parseRoute({
+    const route = parseRoute({
       handler,
       // This flag can be used when responding to OPTIONS requests,
       // which is outside the scope of this project
       middleware: true,
-    });
+    })
 
-    this.routes.push(route);
+    this.routes.push(route)
   }
 
   /**
@@ -97,7 +99,7 @@ module.exports = class Router {
    * @param {*} handler
    */
   add({ host, path, excludePath, method, handlerName, headers, protocol }, handler) {
-    const route = parser.parseRoute({
+    const route = parseRoute({
       method,
       host,
       path,
@@ -106,9 +108,9 @@ module.exports = class Router {
       headers,
       handlerName,
       protocol,
-    });
+    })
 
-    this.routes.push(route);
+    this.routes.push(route)
   }
 
   /**
@@ -116,21 +118,21 @@ module.exports = class Router {
    * @param {*} event
    */
   async resolve(event) {
-    const ctx = new Context(event);
+    const ctx = new Context(event)
 
     try {
-      await resolver.recurseRoutes(ctx, this.routes);
+      await recurseRoutes(ctx, this.routes)
 
       // eslint-disable-next-line no-undef
       return new Response(ctx.body, {
         status: ctx.status,
         headers: ctx.response.headers,
-      });
+      })
     } catch (err) {
       // eslint-disable-next-line no-undef
       return new Response(err.message, {
         status: 500,
-      });
+      })
     }
   }
-};
+}

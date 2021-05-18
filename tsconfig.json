@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "src",
+    "module": "esnext",
+    "target": "esnext",
+    "lib": ["esnext", "webworker"],
+    "alwaysStrict": false,
+    "strict": false,
+    "preserveConstEnums": true,
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "esModuleInterop": true
+  },
+  "include": [
+    "./src/*.ts",
+    "./test/*.ts",
+    "./src/**/*.ts",
+    "./test/**/*.ts"
+  ],
+  "exclude": ["node_modules/", "dist/"]
+}
